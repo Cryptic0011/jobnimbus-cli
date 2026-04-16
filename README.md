@@ -1,25 +1,60 @@
-# JobNimbus Read CLI
+<p align="center">
+  <img src="assets/logo.png" alt="JobNimbus Read CLI" width="200">
+</p>
 
-A **read-only**, agent-native CLI for auditing everything in a JobNimbus CRM account. Built for AI agents to query contacts, jobs, tasks, activities, invoices, estimates, products, files, and workflows — with zero risk of data modification.
+<h1 align="center">JobNimbus Read CLI</h1>
+
+<p align="center">
+  <strong>Read-only, agent-native CLI for auditing everything in a JobNimbus CRM account.</strong><br>
+  Built for AI agents to query contacts, jobs, tasks, activities, invoices, estimates, products, files, and workflows — with zero risk of data modification.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/python-3.9+-green" alt="Python">
+  <img src="https://img.shields.io/badge/mode-read--only-orange" alt="Read Only">
+  <img src="https://img.shields.io/badge/tests-61%20passed-brightgreen" alt="Tests">
+</p>
+
+---
 
 ## Why
 
 JobNimbus has no built-in reporting CLI. This tool lets AI agents (or humans) query the full JobNimbus API from the terminal with structured JSON output, ElasticSearch queries, pagination, and bulk export — all strictly read-only.
 
-## Install
+## One-Line Install
+
+### macOS / Linux
 
 ```bash
-git clone https://github.com/gaborpatterson/jobnimbus-read-cli.git
-cd jobnimbus-read-cli/agent-harness
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli/agent-harness && python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]" && mkdir -p ~/.claude/skills/jobnimbus-cli && cp cli_anything/jobnimbus/skills/SKILL.md ~/.claude/skills/jobnimbus-cli/SKILL.md && echo "Done! Run: jn --help"
 ```
 
-## Configure
+### Windows (PowerShell)
 
+```powershell
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git; cd jobnimbus-read-cli\agent-harness; python -m venv .venv; .venv\Scripts\Activate.ps1; pip install -e ".[dev]"; New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\jobnimbus-cli" | Out-Null; Copy-Item cli_anything\jobnimbus\skills\SKILL.md "$env:USERPROFILE\.claude\skills\jobnimbus-cli\SKILL.md"; Write-Host "Done! Run: jn --help"
+```
+
+### After install, set your API key
+
+**macOS/Linux** — add to `~/.zshrc` or `~/.bashrc`:
 ```bash
 export JOBNIMBUS_API_KEY="your-api-key"
+```
+
+**Windows PowerShell:**
+```powershell
+[System.Environment]::SetEnvironmentVariable("JOBNIMBUS_API_KEY", "your-api-key", "User")
+```
+
+**Claude Code** — add to `~/.claude/settings.json`:
+```json
+{
+  "env": {
+    "JOBNIMBUS_API_KEY": "your-api-key"
+  }
+}
 ```
 
 Get your API key from JobNimbus: **Settings > API Keys**.
@@ -27,8 +62,11 @@ Get your API key from JobNimbus: **Settings > API Keys**.
 ## Quick Start
 
 ```bash
-# Activate the venv
+# Activate the venv (do this each session)
+# macOS/Linux:
 source agent-harness/.venv/bin/activate
+# Windows:
+# agent-harness\.venv\Scripts\Activate.ps1
 
 # Account overview
 jn summary
@@ -106,25 +144,13 @@ jn activities search "note:*leak* AND record_type_name:note"
 
 ## Agent Usage
 
-For AI agent integration, add the skill to Claude Code:
+The one-line install already copies the skill to `~/.claude/skills/`. After install, any Claude Code session will automatically use the CLI when you mention JobNimbus.
 
-```bash
-# Copy skill definition
-mkdir -p ~/.claude/skills/jobnimbus-cli
-cp agent-harness/cli_anything/jobnimbus/skills/SKILL.md ~/.claude/skills/jobnimbus-cli/SKILL.md
-```
-
-Then set the API key in Claude Code settings (`~/.claude/settings.json`):
-
-```json
-{
-  "env": {
-    "JOBNIMBUS_API_KEY": "your-key"
-  }
-}
-```
-
-The agent will automatically use the CLI when you mention JobNimbus in conversation.
+Just talk naturally:
+- *"How many unpaid invoices do I have in JobNimbus?"*
+- *"Pull all activity notes for contact JNID123"*
+- *"What jobs were updated today?"*
+- *"Give me a summary of my JN account"*
 
 ## Read-Only Guarantee
 
