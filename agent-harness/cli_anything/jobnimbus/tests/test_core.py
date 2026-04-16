@@ -220,6 +220,24 @@ class TestListRecordParams:
             params = mock_req.call_args[1].get("params") or mock_req.call_args[0][1]
             assert params["status"] == "Lead"
 
+    def test_activities_response_normalized_from_activity_key(self):
+        with patch.object(self.client, "_request") as mock_req:
+            mock_req.return_value = {
+                "activity": [{"jnid": "act1", "record_type_name": "Note"}],
+                "count": 1,
+            }
+            result = self.client.list_records("activities", size=10)
+            assert result["count"] == 1
+            assert result["results"] == [{"jnid": "act1", "record_type_name": "Note"}]
+            assert result["activity"] == [{"jnid": "act1", "record_type_name": "Note"}]
+
+    def test_non_activity_response_not_rewritten(self):
+        with patch.object(self.client, "_request") as mock_req:
+            mock_req.return_value = {"contacts": [{"jnid": "c1"}], "count": 1}
+            result = self.client.list_records("contacts", size=10)
+            assert "results" not in result
+            assert result["contacts"] == [{"jnid": "c1"}]
+
 
 # ── Formatting Tests ────────────────────────────────────────────────────────
 
@@ -401,6 +419,15 @@ class TestNewResources:
             result = self.client.get_account_settings()
             mock_req.assert_called_with("account/settings")
             assert "workflows" in result
+
+    def test_paginate_all_uses_normalized_activity_results(self):
+        with patch.object(self.client, "_request") as mock_req:
+            mock_req.side_effect = [
+                {"activity": [{"jnid": "a1"}, {"jnid": "a2"}], "count": 3},
+                {"activity": [{"jnid": "a3"}], "count": 3},
+            ]
+            records = list(self.client.paginate_all("activities", page_size=2))
+            assert [r["jnid"] for r in records] == ["a1", "a2", "a3"]
 
 
 class TestFindRecord:

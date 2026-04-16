@@ -102,6 +102,22 @@ class JobNimbusClient:
 
         raise JobNimbusClientError("Max retries exceeded")
 
+    def _normalize_list_response(self, resource, response):
+        """Normalize list endpoints to the standard {"results": [...], "count": N} shape."""
+        if not isinstance(response, dict):
+            return response
+
+        if "results" in response:
+            return response
+
+        # JobNimbus activities sometimes return list data under "activity".
+        if resource == "activities" and "activity" in response:
+            normalized = dict(response)
+            normalized["results"] = response.get("activity") or []
+            return normalized
+
+        return response
+
     def list_records(self, resource, size=None, offset=None, sort_field=None,
                      sort_direction=None, query=None, fields=None, filters=None):
         """List records for a given resource type.
@@ -144,7 +160,8 @@ class JobNimbusClient:
             for k, v in filters.items():
                 params[k] = v
 
-        return self._request(endpoint, params=params)
+        response = self._request(endpoint, params=params)
+        return self._normalize_list_response(resource, response)
 
     def get_record(self, resource, record_id, fields=None):
         """Get a single record by ID.
