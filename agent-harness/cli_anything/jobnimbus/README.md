@@ -5,10 +5,7 @@ Read-only agent-native CLI for auditing everything in a JobNimbus account.
 ## Installation
 
 ```bash
-cd agent-harness
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+python3 -m pip install --user .
 ```
 
 ## Configuration
@@ -36,7 +33,7 @@ jn tasks list --status=Open
 # Activities / Notes
 jn activities list --size=20
 jn activities notes --search="leak"
-jn activities search "note:*inspection*" --json
+jn --json activities search "note:*inspection*"
 
 # Invoices
 jn invoices list --size=10
@@ -88,3 +85,7 @@ jn repl
 ## Read-Only Guarantee
 
 This CLI **only implements GET requests**. No data is ever created, modified, or deleted. This is enforced at the API client level — the client class exposes no write methods.
+
+Command coverage notes:
+- `products` supports `list`, `get`, and `search`
+- `files` supports `list`, `get`, and `count`

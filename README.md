@@ -24,19 +24,31 @@ JobNimbus has no built-in reporting CLI. This tool lets AI agents (or humans) qu
 
 ## One-Line Install
 
-### macOS / Linux
+### Claude Code (macOS / Linux)
 
 ```bash
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli/agent-harness && python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]" && mkdir -p ~/.claude/skills/jobnimbus-cli && cp cli_anything/jobnimbus/skills/SKILL.md ~/.claude/skills/jobnimbus-cli/SKILL.md && echo "Done! Run: jn --help"
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+```
+
+### Codex (macOS / Linux)
+
+```bash
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git; cd jobnimbus-read-cli\agent-harness; python -m venv .venv; .venv\Scripts\Activate.ps1; pip install -e ".[dev]"; New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills\jobnimbus-cli" | Out-Null; Copy-Item cli_anything\jobnimbus\skills\SKILL.md "$env:USERPROFILE\.claude\skills\jobnimbus-cli\SKILL.md"; Write-Host "Done! Run: jn --help"
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git; cd jobnimbus-read-cli; powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-### After install, set your API key
+The installer:
+- Installs `jn` as a user-level Python command with `pip install --user`
+- Copies the skill into `~/.claude/skills/` if `~/.claude` exists
+- Copies the skill into `${CODEX_HOME:-~/.codex}/skills/` if Codex is installed
+- Tells you if your Python user `bin` directory still needs to be added to `PATH`
+
+## Set Your API Key
 
 **macOS/Linux** — add to `~/.zshrc` or `~/.bashrc`:
 ```bash
@@ -62,12 +74,6 @@ Get your API key from JobNimbus: **Settings > API Keys**.
 ## Quick Start
 
 ```bash
-# Activate the venv (do this each session)
-# macOS/Linux:
-source agent-harness/.venv/bin/activate
-# Windows:
-# agent-harness\.venv\Scripts\Activate.ps1
-
 # Account overview
 jn summary
 
@@ -106,7 +112,10 @@ jn export activities --query="record_type_name:note" > notes.jsonl
 | `jn summary` | Record counts for all resources |
 | `jn repl` | Interactive session |
 
-Each resource command supports: `list`, `get`, `count`, `search`.
+Most resources support `list`, `get`, `count`, and `search`.
+Exceptions:
+- `jn products` supports `list`, `get`, and `search`
+- `jn files` supports `list`, `get`, and `count`
 
 ## Common Options
 
@@ -144,7 +153,11 @@ jn activities search "note:*leak* AND record_type_name:note"
 
 ## Agent Usage
 
-The one-line install already copies the skill to `~/.claude/skills/`. After install, any Claude Code session will automatically use the CLI when you mention JobNimbus.
+The installer copies the skill into Claude and Codex only if those homes already exist on your machine. That keeps the install safe for first-time users while still making the tool available to agents you already use.
+
+For agent use, make sure:
+- `jn` works in a fresh terminal
+- `JOBNIMBUS_API_KEY` is set in the environment the agent will run with
 
 Just talk naturally:
 - *"How many unpaid invoices do I have in JobNimbus?"*
@@ -163,13 +176,13 @@ This CLI **only implements HTTP GET requests**. The API client class:
 
 ```bash
 # Unit tests (no API key needed)
-pytest cli_anything/jobnimbus/tests/test_core.py -v
+python3 -m pytest agent-harness/cli_anything/jobnimbus/tests/test_core.py -v
 
 # E2E tests (requires API key)
 export JOBNIMBUS_API_KEY="your-key"
-pytest cli_anything/jobnimbus/tests/test_full_e2e.py -v
+python3 -m pytest agent-harness/cli_anything/jobnimbus/tests/test_full_e2e.py -v
 ```
 
 ## License
 
-Private — internal use only.
+No license file has been added yet. Until one is added, treat the code as all rights reserved.
