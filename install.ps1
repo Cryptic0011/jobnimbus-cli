@@ -45,6 +45,7 @@ Install-Skill -AgentName "Claude" -HomeDir (Join-Path $HOME ".claude")
 
 $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
 Install-Skill -AgentName "Codex" -HomeDir $codexHome
+Install-Skill -AgentName "OpenClaw" -HomeDir (Join-Path $HOME ".openclaw")
 
 Write-Host ""
 Write-Host "Install complete."

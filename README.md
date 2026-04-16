@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  The installer can also add a ready-to-use skill for Claude, Codex, and OpenClaw.<br>
+  You can review that skill here: <a href="agent-harness/cli_anything/jobnimbus/skills/SKILL.md">SKILL.md</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/python-3.9+-green" alt="Python">
   <img src="https://img.shields.io/badge/mode-read--only-orange" alt="Read Only">
@@ -24,13 +29,29 @@ JobNimbus has no built-in reporting CLI. This tool lets AI agents (or humans) qu
 
 ## One-Line Install
 
-### Claude Code (macOS / Linux)
+### CLI Only (macOS / Linux)
 
 ```bash
 git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
 ```
 
-### Codex (macOS / Linux)
+### Agent Installs (macOS / Linux)
+
+These use the same installer on purpose. The difference is which agent you already have on your machine.
+
+**Claude Code**
+
+```bash
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+```
+
+**Codex**
+
+```bash
+git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+```
+
+**OpenClaw**
 
 ```bash
 git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
@@ -42,10 +63,15 @@ git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-
 git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git; cd jobnimbus-read-cli; powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
+For normal CLI users, the installer just gives you a global `jn` command.
+
+For Claude/Codex/OpenClaw users, the same installer also handles agent setup when it finds that agent's home directory.
+
 The installer:
 - Installs `jn` as a user-level Python command with `pip install --user`
 - Copies the skill into `~/.claude/skills/` if `~/.claude` exists
 - Copies the skill into `${CODEX_HOME:-~/.codex}/skills/` if Codex is installed
+- Copies the skill into `~/.openclaw/skills/` if OpenClaw is installed
 - Tells you if your Python user `bin` directory still needs to be added to `PATH`
 
 ## Set Your API Key
@@ -61,6 +87,15 @@ export JOBNIMBUS_API_KEY="your-api-key"
 ```
 
 **Claude Code** — add to `~/.claude/settings.json`:
+```json
+{
+  "env": {
+    "JOBNIMBUS_API_KEY": "your-api-key"
+  }
+}
+```
+
+**OpenClaw** — add to `~/.openclaw/openclaw.json`:
 ```json
 {
   "env": {

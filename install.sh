@@ -45,6 +45,7 @@ install_skill() {
 
 install_skill "Claude" "$HOME/.claude"
 install_skill "Codex" "${CODEX_HOME:-$HOME/.codex}"
+install_skill "OpenClaw" "$HOME/.openclaw"
 
 echo
 echo "Install complete."
