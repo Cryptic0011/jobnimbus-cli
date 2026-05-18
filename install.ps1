@@ -51,11 +51,18 @@ Write-Host ""
 Write-Host "Install complete."
 Write-Host "CLI script location: $userBin\jn.exe"
 
-$pathEntries = @($env:PATH -split ';') | ForEach-Object { $_.TrimEnd('\') }
-if ($pathEntries -notcontains $userBin.TrimEnd('\')) {
+# Persist the Python user Scripts dir on the user PATH so `jn` is found in
+# new shells. The installer used to only print advice, which left `jn` missing.
+$userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+$userPathEntries = @()
+if ($userPath) {
+    $userPathEntries = $userPath -split ';' | ForEach-Object { $_.TrimEnd('\') } | Where-Object { $_ }
+}
+if ($userPathEntries -notcontains $userBin.TrimEnd('\')) {
+    $newUserPath = if ($userPath) { "$userBin;$userPath" } else { $userBin }
+    [System.Environment]::SetEnvironmentVariable("PATH", $newUserPath, "User")
     Write-Host ""
-    Write-Host "Add this to your user PATH if 'jn' is not found in a new PowerShell window:"
-    Write-Host "  $userBin"
+    Write-Host "Added $userBin to your user PATH. Restart PowerShell for 'jn' to be found."
 }
 
 Write-Host ""

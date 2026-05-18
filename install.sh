@@ -47,15 +47,29 @@ install_skill "Claude" "$HOME/.claude"
 install_skill "Codex" "${CODEX_HOME:-$HOME/.codex}"
 install_skill "OpenClaw" "$HOME/.openclaw"
 
+# Install a stable `jn` wrapper into ~/.local/bin, which is on PATH for most
+# shells. This avoids relying on the Python user bin (which is version-keyed,
+# e.g. .../Python/3.14/bin, and silently drops off PATH after a Python upgrade).
+LOCAL_BIN="$HOME/.local/bin"
+mkdir -p "$LOCAL_BIN"
+cat > "$LOCAL_BIN/jn" <<'WRAPPER'
+#!/usr/bin/env bash
+# Wrapper for the JobNimbus Read-Only CLI. Survives Python version bumps
+# as long as the cli-anything-jobnimbus package is installed for python3.
+exec python3 -m cli_anything.jobnimbus "$@"
+WRAPPER
+chmod +x "$LOCAL_BIN/jn"
+echo "Installed 'jn' wrapper to $LOCAL_BIN/jn"
+
 echo
 echo "Install complete."
 echo "Python command: $PYTHON_BIN"
-echo "CLI script location: $USER_BIN/jn"
+echo "CLI command: $LOCAL_BIN/jn"
 
-if [[ ":$PATH:" != *":$USER_BIN:"* ]]; then
+if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
   echo
   echo "Add this to your shell profile if 'jn' is not found in a new terminal:"
-  echo "  export PATH=\"$USER_BIN:\$PATH\""
+  echo "  export PATH=\"$LOCAL_BIN:\$PATH\""
 fi
 
 echo
