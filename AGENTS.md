@@ -1,7 +1,8 @@
 # Agent instructions
 
 This repository is `jn`, a command-line tool that reads **and writes** a JobNimbus
-CRM account. (The repository name still says "read"; since v0.3.0 it is not read-only.)
+CRM account. (It was read-only before v0.3.0, and the installed skill is still
+named `jobnimbus-read-cli`; the tool itself is not read-only.)
 
 ## Using `jn` on someone's account
 
