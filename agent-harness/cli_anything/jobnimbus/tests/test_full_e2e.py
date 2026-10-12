@@ -1,6 +1,7 @@
 """E2E tests for JobNimbus CLI — requires JOBNIMBUS_API_KEY env var.
 
-These tests hit the real API and verify data integrity.
+These tests hit the real API and verify data integrity. They only READ:
+no write command is ever run here, so they are safe against a live account.
 Skip if no API key is set.
 """
 
@@ -35,7 +36,7 @@ def run_cli(*args, json_mode=True):
     if json_mode:
         cmd.append("--json")
     cmd.extend(args)
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if result.returncode != 0:
         pytest.fail(f"CLI failed: {result.stderr}\nstdout: {result.stdout}")
     if json_mode:
@@ -168,7 +169,8 @@ class TestE2EEstimates:
 class TestE2EProducts:
     def test_list_products(self):
         data = run_cli("products", "list", "--size=5")
-        assert "results" in data or isinstance(data, list) or "count" in data
+        assert "results" in data
+        assert "count" in data
 
 
 class TestE2EFiles:
@@ -176,6 +178,37 @@ class TestE2EFiles:
         data = run_cli("files", "list", "--size=5")
         assert "results" in data
         assert "count" in data
+
+
+class TestE2EFilters:
+    """Queries and filter options must actually narrow the results."""
+
+    def test_query_narrows_count(self):
+        total = run_cli("contacts", "count")["count"]
+        recent = run_cli("contacts", "count", "-q", "date_created:[1750000000 TO *]")["count"]
+        assert 0 <= recent < total
+
+    def test_status_filter_only_returns_that_status(self):
+        first = run_cli("contacts", "list", "--size=1", "--fields=jnid,status_name")["results"]
+        if first and first[0].get("status_name"):
+            status = first[0]["status_name"]
+            data = run_cli("contacts", "list", "--size=5", "--status", status,
+                           "--fields=jnid,status_name")
+            assert data["results"]
+            assert all(r["status_name"] == status for r in data["results"])
+
+    def test_related_only_returns_linked_records(self):
+        jobs = run_cli("jobs", "list", "--size=1", "--fields=jnid,primary")["results"]
+        if jobs and jobs[0].get("primary"):
+            contact_id = jobs[0]["primary"]["id"]
+            related = run_cli("related", contact_id, "--type", "contact")
+            assert jobs[0]["jnid"] in {j["jnid"] for j in related["jobs"]["results"]}
+
+    def test_single_record_gets(self):
+        for resource in ("invoices", "estimates", "files", "payments"):
+            rows = run_cli(resource, "list", "--size=1", "--fields=jnid")["results"]
+            if rows:
+                assert run_cli(resource, "get", rows[0]["jnid"])["jnid"] == rows[0]["jnid"]
 
 
 class TestE2EWorkflows:

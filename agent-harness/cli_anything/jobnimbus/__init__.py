@@ -1,3 +1,3 @@
-"""JobNimbus Read-Only CLI - Agent-native reporting tool for auditing JobNimbus accounts."""
+"""JobNimbus CLI - agent-native read/write tool for JobNimbus accounts."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

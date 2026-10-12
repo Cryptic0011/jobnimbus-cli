@@ -54,7 +54,7 @@ LOCAL_BIN="$HOME/.local/bin"
 mkdir -p "$LOCAL_BIN"
 cat > "$LOCAL_BIN/jn" <<'WRAPPER'
 #!/usr/bin/env bash
-# Wrapper for the JobNimbus Read-Only CLI. Survives Python version bumps
+# Wrapper for the JobNimbus CLI. Survives Python version bumps
 # as long as the cli-anything-jobnimbus package is installed for python3.
 exec python3 -m cli_anything.jobnimbus "$@"
 WRAPPER
