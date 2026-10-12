@@ -26,7 +26,7 @@
 
 ---
 
-> **Not read-only any more.** The repository is still named `jobnimbus-read-cli`, but since v0.3.0 `jn` also creates, updates and soft-deletes records. Set `JOBNIMBUS_READ_ONLY=1` to get the old read-only behaviour.
+> **Not read-only any more.** This project used to be `jobnimbus-read-cli`. Since v0.3.0 `jn` also creates, updates and soft-deletes records. Set `JOBNIMBUS_READ_ONLY=1` to get the old read-only behaviour.
 
 ## Why
 
@@ -37,7 +37,7 @@ JobNimbus has no built-in CLI. This tool lets AI agents (or humans) work the ful
 ### CLI Only (macOS / Linux)
 
 ```bash
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+git clone https://github.com/Cryptic0011/jobnimbus-cli.git && cd jobnimbus-cli && ./install.sh
 ```
 
 ### Agent Installs (macOS / Linux)
@@ -47,25 +47,25 @@ These use the same installer on purpose. The difference is which agent you alrea
 **Claude Code**
 
 ```bash
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+git clone https://github.com/Cryptic0011/jobnimbus-cli.git && cd jobnimbus-cli && ./install.sh
 ```
 
 **Codex**
 
 ```bash
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+git clone https://github.com/Cryptic0011/jobnimbus-cli.git && cd jobnimbus-cli && ./install.sh
 ```
 
 **OpenClaw**
 
 ```bash
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git && cd jobnimbus-read-cli && ./install.sh
+git clone https://github.com/Cryptic0011/jobnimbus-cli.git && cd jobnimbus-cli && ./install.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/Cryptic0011/jobnimbus-read-cli.git; cd jobnimbus-read-cli; powershell -ExecutionPolicy Bypass -File .\install.ps1
+git clone https://github.com/Cryptic0011/jobnimbus-cli.git; cd jobnimbus-cli; powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 For normal CLI users, the installer just gives you a global `jn` command.
