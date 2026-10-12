@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/logo.png" alt="JobNimbus Read CLI" width="200">
+  <img src="assets/logo.png" alt="JobNimbus CLI" width="200">
 </p>
 
-<h1 align="center">JobNimbus Read CLI</h1>
+<h1 align="center">JobNimbus CLI</h1>
 
 <p align="center">
-  <strong>Read-only, agent-native CLI for auditing everything in a JobNimbus CRM account.</strong><br>
-  Built for AI agents to query contacts, jobs, tasks, activities, invoices, estimates, products, files, and workflows — with zero risk of data modification.
+  <strong>Agent-native CLI for reading and writing everything in a JobNimbus CRM account.</strong><br>
+  Built for AI agents to query, create, update and soft-delete contacts, jobs, tasks, notes, invoices, estimates, products, orders and files — with a dry-run preview and a read-only lock.
 </p>
 
 <p align="center">
@@ -15,17 +15,22 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-0.3.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/python-3.9+-green" alt="Python">
-  <img src="https://img.shields.io/badge/mode-read--only-orange" alt="Read Only">
-  <img src="https://img.shields.io/badge/tests-61%20passed-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/mode-read%20%2B%20write-orange" alt="Read and Write">
+</p>
+
+<p align="center">
+  <img src="assets/demo.gif" alt="jn demo: a filtered read, a --dry-run preview of a write, then adding a note" width="860">
 </p>
 
 ---
 
+> **Not read-only any more.** The repository is still named `jobnimbus-read-cli`, but since v0.3.0 `jn` also creates, updates and soft-deletes records. Set `JOBNIMBUS_READ_ONLY=1` to get the old read-only behaviour.
+
 ## Why
 
-JobNimbus has no built-in reporting CLI. This tool lets AI agents (or humans) query the full JobNimbus API from the terminal with structured JSON output, ElasticSearch queries, pagination, and bulk export — all strictly read-only.
+JobNimbus has no built-in CLI. This tool lets AI agents (or humans) work the full JobNimbus public API from the terminal: structured JSON output, filtering, pagination, bulk export, and create / update / delete on every record type the API can write.
 
 ## One-Line Install
 
@@ -118,14 +123,21 @@ jn contacts list --size=10
 # Search jobs
 jn jobs search "status_name:Completed"
 
-# Find unpaid invoices
-jn --json invoices search "status:Unpaid"
+# Find open invoices
+jn --json invoices search "status_name:Open"
 
 # Pull everything for a contact
 jn --json related CONTACT_JNID
 
 # Export all notes as JSONL
-jn export activities --query="record_type_name:note" > notes.jsonl
+jn export activities --query="record_type_name:Note" > notes.jsonl
+
+# Preview a write, then do it
+jn --dry-run contacts update CONTACT_JNID --set status_name="Appointment Booked"
+jn contacts update CONTACT_JNID --set status_name="Appointment Booked"
+
+# Add a note to a contact or job
+jn activities add-note JNID "Left a voicemail"
 ```
 
 ## Commands
@@ -139,35 +151,48 @@ jn export activities --query="record_type_name:note" > notes.jsonl
 | `jn invoices` | Billing, line items, payment status |
 | `jn estimates` | Quotes, proposals |
 | `jn products` | Material/labor catalog, pricing |
-| `jn files` | Documents, photos, attachments |
-| `jn workflows` | Pipeline stages and statuses |
+| `jn files` | Documents, photos, attachments (`download`, `upload`) |
+| `jn materialorders` / `jn workorders` | Material and work orders |
+| `jn payments` / `jn creditmemos` | Payments and credit memos (read) |
+| `jn workflows` | Pipeline stages, statuses, account settings |
+| `jn api METHOD PATH` | Any other endpoint (users, UoMs, account setup, payments) |
 | `jn find <JNID>` | Auto-detect resource type |
 | `jn related <JNID>` | All records for a contact/job |
 | `jn export <resource>` | Bulk JSONL with auto-pagination |
 | `jn summary` | Record counts for all resources |
 | `jn repl` | Interactive session |
 
-Most resources support `list`, `get`, `count`, and `search`.
-Exceptions:
-- `jn products` supports `list`, `get`, and `search`
-- `jn files` supports `list`, `get`, and `count`
+Every resource supports `list`, `get`, `count`, and `search`.
+
+Writes, where the JobNimbus API allows them:
+- `create`, `update`, `delete` on contacts, jobs, tasks, invoices, estimates, products, materialorders, workorders
+- `activities create` / `add-note` / `update`
+- `files upload` / `update`
+
+`delete` is a soft delete (`is_active=false`), needs `--yes`, and is undone with `update JNID --set is_active:=true`.
 
 ## Common Options
 
 ```
---json              Output raw JSON (for agents)
+--json              Output raw JSON (for agents)          [global, before the command]
+--dry-run           Print a write request, send nothing   [global]
+--read-only         Block all writes                      [global]
+--actor EMAIL       Act as this JobNimbus user            [global]
 --size N            Records per page (max 1000)
---offset N          Pagination offset
+--offset N          Pagination offset (max 9999; use export beyond that)
 --sort-field F      Sort by field (default: date_updated)
 --sort-dir asc|desc Sort direction (default: desc)
---query Q           ElasticSearch/Lucene query
+--query Q           Query (see below)
+--filter JSON       Raw JobNimbus filter JSON
 --fields F          Comma-separated fields (saves tokens)
 --columns F         Custom table columns
+--set KEY=VALUE     Field for create/update (KEY:=JSON for non-strings)
+--data JSON|@file|- Whole body for create/update
 ```
 
 ## Query Syntax
 
-The `--query` parameter supports ElasticSearch/Lucene syntax:
+`--query` / `search` take a small query language that is translated into the API's `filter` JSON:
 
 ```bash
 # Field match
@@ -182,40 +207,51 @@ jn contacts search "city:Miami AND state_text:FL"
 # Range
 jn invoices search "total:[1000 TO *]"
 
-# Combined
-jn activities search "note:*leak* AND record_type_name:note"
+# Negation, multi-word values
+jn contacts search 'city:Orlando AND NOT status_name:"Lost Lead"'
 ```
+
+AND and OR cannot be mixed and parentheses are not supported — those queries fail with an error instead of being ignored. Use `--filter` with raw JSON for anything more complex.
 
 ## Agent Usage
 
-The installer copies the skill into Claude and Codex only if those homes already exist on your machine. That keeps the install safe for first-time users while still making the tool available to agents you already use.
+Agents get their instructions from two places:
+
+- **[SKILL.md](agent-harness/cli_anything/jobnimbus/skills/SKILL.md)** — the full command reference and the rules for writing safely. The installer copies it into Claude, Codex and OpenClaw when those are already on your machine.
+- **[AGENTS.md](AGENTS.md)** — a short pointer at the repo root for agents that work from a clone (Cursor, Gemini CLI, OpenCode and others).
 
 For agent use, make sure:
 - `jn` works in a fresh terminal
 - `JOBNIMBUS_API_KEY` is set in the environment the agent will run with
+- `JOBNIMBUS_READ_ONLY=1` is set for any agent that should only look, never change
 
 Just talk naturally:
-- *"How many unpaid invoices do I have in JobNimbus?"*
+- *"How many open invoices do I have in JobNimbus?"*
 - *"Pull all activity notes for contact JNID123"*
-- *"What jobs were updated today?"*
-- *"Give me a summary of my JN account"*
+- *"Move the Kent job to Completed and add a note that the final check cleared"*
+- *"Create a follow-up task for Sam on Thursday for this contact"*
+- *"Show me what you would change first"* (the agent runs it with `--dry-run`)
 
-## Read-Only Guarantee
+## Write Safety
 
-This CLI **only implements HTTP GET requests**. The API client class:
-- Exposes no `create`, `update`, or `delete` methods
-- The `_request()` method only calls `session.get()`
-- Verified by automated tests that inspect the source code
+- `--dry-run` prints the exact request (method, URL, body) without sending it.
+- `--read-only` or `JOBNIMBUS_READ_ONLY=1` blocks every POST and PUT. Set it for agents that should only audit.
+- `delete` requires `--yes` and is a soft delete.
+- Writes are never retried after a timeout, so nothing is created twice.
+- The API key is only ever sent to `*.jobnimbus.com`.
+- What a key may change is ultimately set by its JobNimbus access profile (Settings > API).
 
 ## Tests
 
 ```bash
-# Unit tests (no API key needed)
-python3 -m pytest agent-harness/cli_anything/jobnimbus/tests/test_core.py -v
+cd agent-harness
 
-# E2E tests (requires API key)
+# Unit tests (no API key, no network)
+python3 -m pytest cli_anything/jobnimbus/tests --ignore=cli_anything/jobnimbus/tests/test_full_e2e.py
+
+# E2E tests (requires API key; read-only, never writes)
 export JOBNIMBUS_API_KEY="your-key"
-python3 -m pytest agent-harness/cli_anything/jobnimbus/tests/test_full_e2e.py -v
+python3 -m pytest cli_anything/jobnimbus/tests/test_full_e2e.py
 ```
 
 ## License

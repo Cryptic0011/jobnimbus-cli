@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, height=720">
+    <title>jn — JobNimbus CLI demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #070b11;
+        --panel: #0c131c;
+        --bar: #111b28;
+        --border: #22364e;
+        --fg: #e8f1fb;
+        --muted: #8ea3ba;
+        --accent: #3aa0ff;
+        --tint: #a9d4ff;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        color: var(--fg);
+        font-family: "JetBrains Mono", monospace;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ── Background ── */
+      #bg-fill {
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+      }
+      #bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(58, 160, 255, 0.055) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(58, 160, 255, 0.055) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      #bg-glow {
+        position: absolute;
+        left: 340px;
+        top: -260px;
+        width: 900px;
+        height: 620px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(58, 160, 255, 0.2), rgba(58, 160, 255, 0));
+      }
+
+      /* ── Header ── */
+      #header {
+        position: absolute;
+        left: 44px;
+        right: 44px;
+        top: 30px;
+        height: 96px;
+      }
+      .label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 800px;
+      }
+      .label h2 {
+        font-family: "Archivo Black", sans-serif;
+        font-weight: 400;
+        font-size: 50px;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+      }
+      .label p {
+        margin-top: 8px;
+        font-size: 20px;
+        color: var(--muted);
+      }
+      .label p b {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      #label-2,
+      #label-3 {
+        opacity: 0;
+      }
+      #steps {
+        position: absolute;
+        right: 0;
+        top: 12px;
+        display: flex;
+        gap: 10px;
+      }
+      .step {
+        position: relative;
+        width: 128px;
+        height: 40px;
+        border: 1.5px solid #22364e;
+        background-color: #0a1119;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #step-1 {
+        background-color: #3aa0ff;
+        border-color: #3aa0ff;
+        color: #04101d;
+      }
+
+      /* ── Terminal ── */
+      #panel {
+        position: absolute;
+        left: 44px;
+        right: 44px;
+        top: 142px;
+        bottom: 36px;
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+      #bar {
+        height: 44px;
+        padding: 0 18px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--bar);
+        border-bottom: 1.5px solid var(--border);
+      }
+      #bar i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #35495f;
+      }
+      #bar span {
+        margin-left: 14px;
+        font-size: 16px;
+        color: var(--muted);
+      }
+      .beat {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 44px;
+        bottom: 0;
+        padding: 24px 34px;
+        font-size: 25px;
+        line-height: 37px;
+      }
+      #beat-2,
+      #beat-3 {
+        opacity: 0;
+      }
+      .line {
+        height: 37px;
+        white-space: pre;
+      }
+      .glyph {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .t-flag {
+        color: var(--accent);
+      }
+      .t-str {
+        color: var(--tint);
+      }
+      .t-muted {
+        color: var(--muted);
+      }
+      .t-b {
+        font-weight: 700;
+      }
+      .caret {
+        display: inline-block;
+        width: 13px;
+        height: 27px;
+        margin-left: 2px;
+        vertical-align: -5px;
+        background: var(--accent);
+      }
+      .out {
+        opacity: 0;
+      }
+      .stamp {
+        position: absolute;
+        right: 34px;
+        bottom: 28px;
+        height: 52px;
+        padding: 0 24px;
+        border-radius: 26px;
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        opacity: 0;
+      }
+      .stamp.ghost {
+        border: 2px dashed var(--accent);
+        color: var(--accent);
+        background: var(--panel);
+      }
+      .stamp.solid {
+        background: var(--accent);
+        color: #04101d;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-h7cq" id="root" data-composition-id="main" data-start="0" data-duration="14" data-width="1280" data-height="720" data-fps="30">
+      <div data-hf-id="hf-qawk" id="bg" class="layer">
+        <div data-hf-id="hf-02i2" id="bg-fill"></div>
+        <div data-hf-id="hf-r3kh" id="bg-grid"></div>
+        <div data-hf-id="hf-isbq" id="bg-glow"></div>
+      </div>
+
+      <div data-hf-id="hf-1d11" id="stage" class="layer">
+        <div data-hf-id="hf-rw2y" id="header">
+          <div data-hf-id="hf-bo68" class="label" id="label-1">
+            <h2 data-hf-id="hf-meu7">Read anything.</h2>
+            <p data-hf-id="hf-kdlm">filter, search and export <b data-hf-id="hf-q8s3">every record type</b></p>
+          </div>
+          <div data-hf-id="hf-kc23" class="label" id="label-2">
+            <h2 data-hf-id="hf-lt5t">Preview every write.</h2>
+            <p data-hf-id="hf-965e"><b data-hf-id="hf-h5e8">--dry-run</b> prints the request and sends nothing</p>
+          </div>
+          <div data-hf-id="hf-gdy2" class="label" id="label-3">
+            <h2 data-hf-id="hf-16nb">Then send it.</h2>
+            <p data-hf-id="hf-2w5r">create, update, delete, <b data-hf-id="hf-tqpc">notes and files</b></p>
+          </div>
+          <div data-hf-id="hf-djjy" id="steps">
+            <div data-hf-id="hf-szro" class="step" id="step-1">READ</div>
+            <div data-hf-id="hf-06fx" class="step" id="step-2">PREVIEW</div>
+            <div data-hf-id="hf-pt0l" class="step" id="step-3">WRITE</div>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-zk0l" id="panel">
+          <div data-hf-id="hf-2to0" id="bar"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><span data-hf-id="hf-try7">jn · JobNimbus CLI</span></div>
+
+          <div data-hf-id="hf-r6a0" class="beat" id="beat-1">
+            <div data-hf-id="hf-5liy" class="line cmd"><span data-hf-id="hf-9vsb" class="glyph">$ </span><span data-hf-id="hf-lzyg" class="typed"><span data-hf-id="hf-cohy" class="t-b">jn</span> contacts list <span data-hf-id="hf-m30a" class="t-flag">--status</span> Lead <span data-hf-id="hf-ex8i" class="t-flag">-s</span> 3 <span data-hf-id="hf-q877" class="t-flag">--columns</span> display_name,city</span></div>
+            <div data-hf-id="hf-p45p" class="line out"><span data-hf-id="hf-vk01" class="t-muted">Total:</span> 42 <span data-hf-id="hf-e97m" class="t-muted">| Showing:</span> 3</div>
+            <div data-hf-id="hf-01vq" class="line out"> </div>
+            <div data-hf-id="hf-7csn" class="line out t-muted">display_name   | city</div>
+            <div data-hf-id="hf-8dc2" class="line out t-muted">---------------+------------</div>
+            <div data-hf-id="hf-1cyb" class="line out">Dana Whitfield <span data-hf-id="hf-w9pz" class="t-muted">|</span> Orlando</div>
+            <div data-hf-id="hf-9ep8" class="line out">Marcus Lee     <span data-hf-id="hf-mj3r" class="t-muted">|</span> Winter Park</div>
+            <div data-hf-id="hf-u2hy" class="line out">Priya Nair     <span data-hf-id="hf-m4sq" class="t-muted">|</span> Kissimmee</div>
+            <div data-hf-id="hf-cenh" class="stamp solid">42 leads found</div>
+          </div>
+
+          <div data-hf-id="hf-zu5v" class="beat" id="beat-2">
+            <div data-hf-id="hf-smhq" class="line cmd"><span data-hf-id="hf-x6a3" class="glyph">$ </span><span data-hf-id="hf-esbz" class="typed"><span data-hf-id="hf-fuh6" class="t-b">jn</span> <span data-hf-id="hf-a24x" class="t-flag">--dry-run</span> contacts update c81f2a <span data-hf-id="hf-0auw" class="t-flag">--set</span> status_name=Signed</span></div>
+            <div data-hf-id="hf-sv9j" class="line out">{</div>
+            <div data-hf-id="hf-c7n4" class="line out">  <span data-hf-id="hf-w6we" class="t-str">"dry_run"</span>: <span data-hf-id="hf-it4m" class="t-flag">true</span>,</div>
+            <div data-hf-id="hf-2n3l" class="line out">  <span data-hf-id="hf-4676" class="t-str">"method"</span>: "PUT",</div>
+            <div data-hf-id="hf-ctzw" class="line out">  <span data-hf-id="hf-ibj4" class="t-str">"url"</span>: "https://app.jobnimbus.com/api1/contacts/c81f2a",</div>
+            <div data-hf-id="hf-75n0" class="line out">  <span data-hf-id="hf-ii9r" class="t-str">"params"</span>: {},</div>
+            <div data-hf-id="hf-math" class="line out">  <span data-hf-id="hf-rjx5" class="t-str">"body"</span>: {</div>
+            <div data-hf-id="hf-mxak" class="line out">    <span data-hf-id="hf-kxdz" class="t-str">"status_name"</span>: "Signed"</div>
+            <div data-hf-id="hf-tnvl" class="line out">  }</div>
+            <div data-hf-id="hf-xfzp" class="line out">}</div>
+            <div data-hf-id="hf-1yru" class="stamp ghost">DRY RUN · nothing sent</div>
+          </div>
+
+          <div data-hf-id="hf-vw1u" class="beat" id="beat-3">
+            <div data-hf-id="hf-t0sr" class="line cmd"><span data-hf-id="hf-wrz2" class="glyph">$ </span><span data-hf-id="hf-9gux" class="typed"><span data-hf-id="hf-g8s7" class="t-b">jn</span> activities add-note c81f2a <span data-hf-id="hf-dqgo" class="t-str">"Left a voicemail"</span></span></div>
+            <div data-hf-id="hf-deqz" class="line out">  <span data-hf-id="hf-v0ey" class="t-muted">ID:</span> 9d02e7b41c</div>
+            <div data-hf-id="hf-gn2p" class="line out">  <span data-hf-id="hf-teq1" class="t-muted">Note:</span> Left a voicemail</div>
+            <div data-hf-id="hf-73ky" class="line out">  <span data-hf-id="hf-092x" class="t-muted">Type:</span> Note</div>
+            <div data-hf-id="hf-dekx" class="line out">  <span data-hf-id="hf-g1mn" class="t-muted">Created:</span> 2026-10-12T20:14:09+00:00</div>
+            <div data-hf-id="hf-4jq2" class="stamp solid">✓ saved to JobNimbus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var DURATION = 14;
+        var CPS = 30; // typed characters per second
+        var BEATS = [
+          { id: "beat-1", start: 0, end: 4.7 },
+          { id: "beat-2", start: 4.7, end: 9.7 },
+          { id: "beat-3", start: 9.7, end: 13.6 },
+        ];
+
+        // Typing reveals characters across the command's text nodes in document
+        // order, so the authored colour spans survive and any time maps to one
+        // exact string (seek-safe in both directions).
+        function typer(typedEl) {
+          var nodes = [];
+          var walker = document.createTreeWalker(typedEl, NodeFilter.SHOW_TEXT, null);
+          while (walker.nextNode()) nodes.push({ node: walker.currentNode, full: walker.currentNode.data });
+          var length = nodes.reduce(function (n, e) { return n + e.full.length; }, 0);
+          return {
+            length: length,
+            show: function (count) {
+              var remaining = count;
+              nodes.forEach(function (e) {
+                e.node.data = e.full.slice(0, Math.max(0, Math.min(e.full.length, remaining)));
+                remaining -= e.full.length;
+              });
+            },
+          };
+        }
+
+        var tl = gsap.timeline({ paused: true });
+        var FADE = 0.28;
+
+        BEATS.forEach(function (b, i) {
+          b.el = document.getElementById(b.id);
+          b.outs = Array.prototype.slice.call(b.el.querySelectorAll(".out"));
+          b.stamp = b.el.querySelector(".stamp");
+          b.typer = typer(b.el.querySelector(".typed"));
+          b.caret = document.createElement("span");
+          b.caret.className = "caret";
+          b.el.querySelector(".cmd").appendChild(b.caret);
+
+          b.typeStart = b.start + 0.4;
+          b.typeEnd = b.typeStart + b.typer.length / CPS;
+          b.execAt = b.typeEnd + 0.22;
+          var step = b.outs.length > 6 ? 0.07 : 0.1;
+          var lastOut = b.execAt + 0.22 + (b.outs.length - 1) * step;
+
+          if (i > 0) tl.fromTo(b.el, { opacity: 0 }, { opacity: 1, duration: FADE, ease: "power1.out" }, b.start);
+          b.outs.forEach(function (line, n) {
+            tl.fromTo(line, { opacity: 0 }, { opacity: 1, duration: 0.09, ease: "none" }, b.execAt + 0.22 + n * step);
+          });
+          tl.fromTo(
+            b.stamp,
+            { opacity: 0, scale: 0.86 },
+            { opacity: 1, scale: 1, duration: 0.36, ease: "back.out(1.8)" },
+            lastOut + 0.28,
+          );
+          tl.to(b.el, { opacity: 0, duration: FADE, ease: "power1.in" }, b.end - FADE - 0.04);
+        });
+
+        // Loop reset: the first beat returns as an empty prompt, exactly as at t = 0.
+        var first = BEATS[0];
+        var RESET = 13.62;
+        tl.set(first.outs.concat([first.stamp]), { opacity: 0 }, 6);
+        tl.to(first.el, { opacity: 1, duration: FADE, ease: "power1.out" }, RESET);
+
+        // Header labels and step pills swap on the beat boundaries.
+        function swap(outSel, inSel, at) {
+          tl.to(outSel, { opacity: 0, y: -14, duration: 0.26, ease: "power2.in" }, at - 0.28);
+          tl.fromTo(
+            inSel,
+            { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.42, ease: "power3.out", immediateRender: inSel !== "#label-1" },
+            at,
+          );
+        }
+        swap("#label-1", "#label-2", 4.7);
+        swap("#label-2", "#label-3", 9.7);
+        swap("#label-3", "#label-1", RESET);
+        var ON = { backgroundColor: "#3aa0ff", borderColor: "#3aa0ff", color: "#04101d" };
+        var OFF = { backgroundColor: "#0a1119", borderColor: "#22364e", color: "#8ea3ba" };
+        [["#step-1", "#step-2", 4.7], ["#step-2", "#step-3", 9.7], ["#step-3", "#step-1", RESET]].forEach(function (s) {
+          tl.to(s[0], Object.assign({ duration: 0.3, ease: "power1.inOut" }, OFF), s[2] - 0.1);
+          tl.to(s[1], Object.assign({ duration: 0.3, ease: "power1.inOut" }, ON), s[2] - 0.1);
+        });
+
+        // One ambient breath on the glow: two full cycles, back at rest at the loop point.
+        tl.fromTo("#bg-glow", { scale: 1 }, { scale: 1.14, duration: 3.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 0);
+
+        // Text + caret are a pure function of time.
+        function apply(t) {
+          BEATS.forEach(function (b, i) {
+            var afterReset = i === 0 && t >= 6;
+            var count = 0;
+            if (!afterReset && t >= b.typeStart) {
+              count = t >= b.typeEnd ? b.typer.length : Math.floor((t - b.typeStart) * CPS);
+            }
+            b.typer.show(count);
+            var typing = t >= b.typeStart && t < b.typeEnd;
+            var submitted = !afterReset && t >= b.execAt;
+            var blinkOn = t - Math.floor(t) < 0.5; // 1s cycle: 14 whole cycles per loop
+            b.caret.style.opacity = submitted ? "0" : typing || blinkOn ? "1" : "0";
+          });
+        }
+        var driver = { t: 0 };
+        tl.to(driver, { t: DURATION, duration: DURATION, ease: "none", onUpdate: function () { apply(driver.t); } }, 0);
+        apply(0);
+
+        window.__timelines["main"] = tl;
+        tl.seek(0);
+      })();
+    </script>
+  </body>
+</html>
