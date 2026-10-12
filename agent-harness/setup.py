@@ -1,11 +1,11 @@
-"""Setup for cli-anything-jobnimbus — read-only CLI for JobNimbus API."""
+"""Setup for cli-anything-jobnimbus — read/write CLI for the JobNimbus API."""
 
 from setuptools import setup, find_packages
 
 setup(
     name="cli-anything-jobnimbus",
-    version="0.2.0",
-    description="Read-only agent-native CLI for auditing everything in JobNimbus",
+    version="0.3.0",
+    description="Agent-native CLI for reading and writing everything in JobNimbus",
     long_description=open("cli_anything/jobnimbus/README.md").read(),
     long_description_content_type="text/markdown",
     author="Grayson Patterson",

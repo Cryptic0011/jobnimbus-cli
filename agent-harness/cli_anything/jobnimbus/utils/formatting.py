@@ -74,6 +74,13 @@ def format_table(records, columns=None, max_width=None):
     return "\n".join(lines)
 
 
+def _money(value):
+    try:
+        return f"${float(value):.2f}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
 def format_record_summary(record, resource_type):
     """Format a single record as a human-readable summary."""
     lines = []
@@ -119,27 +126,27 @@ def format_record_summary(record, resource_type):
         if record.get("record_type_name"):
             lines.append(f"  Type: {record['record_type_name']}")
 
-    elif resource_type == "invoices":
+    elif resource_type in ("invoices", "materialorders", "workorders"):
         if record.get("number"):
             lines.append(f"  Number: {record['number']}")
         if record.get("title"):
             lines.append(f"  Title: {record['title']}")
-        if record.get("status"):
-            lines.append(f"  Status: {record['status']}")
+        if record.get("status_name") or record.get("status"):
+            lines.append(f"  Status: {record.get('status_name') or record['status']}")
         if record.get("total") is not None:
-            lines.append(f"  Total: ${record['total']:.2f}")
+            lines.append(f"  Total: {_money(record['total'])}")
         if record.get("subtotal") is not None:
-            lines.append(f"  Subtotal: ${record['subtotal']:.2f}")
+            lines.append(f"  Subtotal: {_money(record['subtotal'])}")
 
     elif resource_type == "estimates":
         if record.get("number"):
             lines.append(f"  Number: {record['number']}")
         if record.get("title"):
             lines.append(f"  Title: {record['title']}")
-        if record.get("status"):
-            lines.append(f"  Status: {record['status']}")
+        if record.get("status_name") or record.get("status"):
+            lines.append(f"  Status: {record.get('status_name') or record['status']}")
         if record.get("total") is not None:
-            lines.append(f"  Total: ${record['total']:.2f}")
+            lines.append(f"  Total: {_money(record['total'])}")
 
     elif resource_type == "products":
         if record.get("name"):
@@ -180,8 +187,13 @@ def output_results(data, json_mode=False, resource_type=None, columns=None):
         print(format_json(data))
         return
 
+    if isinstance(data, dict) and "results" not in data:
+        # A single record (get / create / update), not a list response.
+        print(format_record_summary(data, resource_type or ""))
+        return
+
     if isinstance(data, dict):
-        records = data.get("results", [])
+        records = data["results"]
         count = data.get("count", len(records))
         print(f"Total: {count} | Showing: {len(records)}")
         print()
