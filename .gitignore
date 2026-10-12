@@ -7,3 +7,8 @@ build/
 .venv/
 .pytest_cache/
 .claude/
+videos/*/renders/
+videos/*/snapshots/
+videos/*/.hyperframes/
+videos/*/.thumbnails/
+.DS_Store
